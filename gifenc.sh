@@ -5,8 +5,8 @@ start=`date +%s`
 
 cd $(dirname $0)
 
-# 10 Mb LIMIT
-LIMIT=10000000
+# ~10 MB LIMIT
+LIMIT=10400000
 
 # ffmpeg options
 palette="./palette.png"
