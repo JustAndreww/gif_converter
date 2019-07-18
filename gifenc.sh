@@ -26,7 +26,7 @@ done
 cd $(dirname $0)
 
 # Megabytes to bytes
-if (( $(echo "$TARGET_SIZE " | awk '{print ($1 <= 0)}') )) 
+if (( $(echo "$TARGET_SIZE" | awk '{print ($1 <= 0)}') )) 
 	then 
 		TARGET_SIZE=1
 fi
