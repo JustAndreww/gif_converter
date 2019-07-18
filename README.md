@@ -1,7 +1,7 @@
 # gif_converter
 Optimize GIF Size with ffmpeg &amp; gifsicle. FFmpeg should be in `%PATH%`.
 
-Requirements: git bash 
+Requirements: git bash + ffmpeg + Windows.
 
 Usage: `./gifenc.sh -i input.mov -o output.gif -w 720 -f 15 -s 1`
 - `-i` - input file (gif, avi, mov, mp4 ...)
