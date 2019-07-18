@@ -26,7 +26,12 @@ done
 cd $(dirname $0)
 
 # Megabytes to bytes
-LIMIT=$((${TARGET_SIZE#-}*1024*1024))
+if (( $(echo "$TARGET_SIZE " | awk '{print ($1 <= 0)}') )) 
+	then 
+		TARGET_SIZE=1
+fi
+LIMIT_OUTPUT_SIZE_BYTES=$(($TARGET_SIZE*1024*1024))
+echo $LIMIT_OUTPUT_SIZE_BYTES
 
 INPUT_FPS=`ffmpeg -i $INPUT_FILE 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p"`
 INPUT_RES=`ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 $INPUT_FILE`
@@ -56,7 +61,7 @@ ffmpeg -v error -i $INPUT_FILE -i ./palette.png -lavfi "$FILTERS,paletteuse=dith
 OUTPUT_GIF_SIZE=`stat --printf="%s" $OUTPUT_GIF`
 OUTPUT_GIF_SIZE_PRETTY=`numfmt --to=iec-i --suffix=B --format="%.2f" $OUTPUT_GIF_SIZE`
 
-if [ $OUTPUT_GIF_SIZE -ge $LIMIT ]
+if [ $OUTPUT_GIF_SIZE -ge $LIMIT_OUTPUT_SIZE_BYTES ]
 	then
 		echo " > WARNING: GIF is too big: $OUTPUT_GIF_SIZE_PRETTY"
 		echo " > STEP 2: Uber Optimizations in progress..."
@@ -68,7 +73,7 @@ if [ $OUTPUT_GIF_SIZE -ge $LIMIT ]
 		OUTPUT_GIF_SIZE=`stat --printf="%s" $optimized_name`
 		OUTPUT_GIF_SIZE_PRETTY=`numfmt --to=iec-i --suffix=B --format="%.2f" $OUTPUT_GIF_SIZE`
 		
-		if [ $OUTPUT_GIF_SIZE -ge $LIMIT ]
+		if [ $OUTPUT_GIF_SIZE -ge $LIMIT_OUTPUT_SIZE_BYTES ]
 			then
 			echo " > ERROR: File is still too big: $OUTPUT_GIF_SIZE_PRETTY"
 		fi
