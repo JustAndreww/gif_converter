@@ -31,7 +31,6 @@ if (( $(echo "$TARGET_SIZE" | awk '{print ($1 <= 0)}') ))
 		TARGET_SIZE=1
 fi
 LIMIT_OUTPUT_SIZE_BYTES=$(($TARGET_SIZE*1024*1024))
-echo $LIMIT_OUTPUT_SIZE_BYTES
 
 INPUT_FPS=`ffmpeg -i $INPUT_FILE 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p"`
 INPUT_RES=`ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 $INPUT_FILE`
