@@ -4,6 +4,7 @@
 # -i - input file (gif, avi, mov, mp4 ...)
 # -o - output gif file
 # -w - witdh in pixels, will be clamped in case if new width > video width
+# -h - height in pixels, will be clamped in case if new height > video height
 # -f - desired framerate (will be clamped if input file fps is lower)
 # -s - desired gif file size limit in megabytes (1 = 1 MB)
 #      if gif will be larger than size limit another compression attempt will be
@@ -11,13 +12,14 @@
 
 start=`date +%s`
 
-while getopts i:o:w:f:s: option
+while getopts i:o:w:h:f:s: option
 do
 case "${option}"
 in
 i) INPUT_FILE=${OPTARG};;
 o) OUTPUT_GIF=${OPTARG};;
 w) TARGET_WIDTH=${OPTARG};;
+h) TARGET_HEIGHT=${OPTARG};;
 f) TARGET_FPS=${OPTARG};;
 s) TARGET_SIZE=${OPTARG};;
 esac
@@ -36,10 +38,18 @@ INPUT_FPS=`ffmpeg -i $INPUT_FILE 2>&1 | sed -n "s/.*, \(.*\) fp.*/\1/p"`
 INPUT_RES=`ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 $INPUT_FILE`
 
 # stupid checks
-INPUT_WIDTH=(${INPUT_RES//x/ })
+IFS='x' read -ra resolution <<< "$INPUT_RES"
+
 if [ $TARGET_WIDTH -le 0 ] 
 	then
-		TARGET_WIDTH=$INPUT_WIDTH
+		TARGET_WIDTH=${resolution[0]}
+		echo "  WARNING: Clamping output width to: ${TARGET_WIDTH}px"
+fi
+
+if [ $TARGET_HEIGHT -le 0 ] 
+	then
+		TARGET_HEIGHT=${resolution[1]}
+		echo "  WARNING: Clamping output height to: ${TARGET_HEIGHT}px"
 fi
 
 INPUT_SIZE_BYTES=`stat --printf="%s" $INPUT_FILE`
@@ -54,6 +64,11 @@ if (( $(echo "$INPUT_FPS $TARGET_FPS" | awk '{print ($1 < $2)}') )) || [ $TARGET
 fi
 
 FILTERS="fps=$TARGET_FPS,scale='min($TARGET_WIDTH,iw)':-1:flags=lanczos"
+if [ $TARGET_HEIGHT -gt 0 ]
+	then
+		FILTERS="fps=$TARGET_FPS,scale='-1:min($TARGET_HEIGHT,ih)':flags=lanczos"
+fi
+
 ffmpeg -v error -i $INPUT_FILE -vf "$FILTERS,palettegen" -y ./palette.png
 ffmpeg -v error -i $INPUT_FILE -i ./palette.png -lavfi "$FILTERS,paletteuse=dither=sierra2:diff_mode=rectangle" -y $OUTPUT_GIF
 
